@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMAL | Sistema de Control de Flotilla</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================== CSS VARIABLES ===================== */
+:root {
+  --red: #D62828;
+  --red-dark: #9B1A1A;
+  --red-light: #FF4444;
+  --black: #0A0A0A;
+  --gray-900: #111111;
+  --gray-800: #1A1A1A;
+  --gray-700: #242424;
+  --gray-600: #333333;
+  --gray-500: #555555;
+  --gray-400: #888888;
+  --gray-300: #BBBBBB;
+  --gray-100: #EEEEEE;
+  --white: #FFFFFF;
+  --green: #2ECC71;
+  --green-dark: #1A7A43;
+  --yellow: #F39C12;
+  --yellow-dark: #7A5000;
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --surface2: #1E1E1E;
+  --surface3: #282828;
+  --border: #2A2A2A;
+  --text: #E8E8E8;
+  --text-muted: #888;
+  --font-display: 'Rajdhani', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+.light-mode {
+  --bg: #F0F0F0;
+  --surface: #FFFFFF;
+  --surface2: #F5F5F5;
+  --surface3: #EBEBEB;
+  --border: #D5D5D5;
+  --text: #111111;
+  --text-muted: #555555;
+  --gray-800: #FFFFFF;
+  --gray-700: #F5F5F5;
+  --gray-600: #EBEBEB;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ===================== LAYOUT ===================== */
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: background 0.3s;
+}
+
+.sidebar-logo {
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--red);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 700;
+  color: white;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 700;
+  color: var(--text);
+  letter-spacing: 2px;
+}
+
+.logo-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.nav-section {
+  padding: 8px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-label {
+  padding: 12px 16px 6px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  font-weight: 500;
+}
+
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--red); border-left-color: var(--red); background: rgba(214,40,40,0.08); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.btn-theme {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-theme:hover { background: var(--surface3); }
+
+.main {
+  margin-left: 220px;
+  flex: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.topbar-subtitle { font-size: 12px; color: var(--text-muted); }
+
+.topbar-actions { display: flex; gap: 10px; }
+
+.btn {
+  padding: 8px 16px; border-radius: 6px; border: none;
+  cursor: pointer; font-family: var(--font-body);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+.btn-primary { background: var(--red); color: white; }
+.btn-primary:hover { background: var(--red-dark); }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface3); }
+.btn-green { background: var(--green-dark); color: white; }
+.btn-green:hover { background: var(--green); }
+
+.content { padding: 24px 28px; flex: 1; }
+
+/* ===================== PAGES ===================== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===================== CARDS ===================== */
+.cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--red); }
+
+.card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 8px; }
+.card-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.card-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.card-accent { border-left: 3px solid var(--red); }
+.card-green { border-left: 3px solid var(--green); }
+.card-yellow { border-left: 3px solid var(--yellow); }
+
+/* ===================== ALERT STRIP ===================== */
+.alerts-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.alert-chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+  cursor: default;
+}
+.alert-red { background: rgba(214,40,40,0.15); color: var(--red-light); border: 1px solid rgba(214,40,40,0.3); }
+.alert-yellow { background: rgba(243,156,18,0.15); color: var(--yellow); border: 1px solid rgba(243,156,18,0.3); }
+.alert-green { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+
+/* ===================== TABLES ===================== */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.table-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2);
+}
+
+.table-title {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.badge {
+  padding: 2px 8px; border-radius: 4px; font-size: 10px;
+  font-family: var(--font-mono); font-weight: 500;
+}
+.badge-red { background: rgba(214,40,40,0.2); color: var(--red-light); }
+.badge-blue { background: rgba(52,152,219,0.2); color: #5DADE2; }
+.badge-green { background: rgba(46,204,113,0.2); color: var(--green); }
+.badge-yellow { background: rgba(243,156,18,0.2); color: var(--yellow); }
+
+table {
+  width: 100%; border-collapse: collapse;
+}
+
+th {
+  background: var(--surface2);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+
+.light-mode td { border-bottom: 1px solid rgba(0,0,0,0.05); }
+
+tr:hover td { background: rgba(214,40,40,0.04); }
+tr:last-child td { border-bottom: none; }
+
+td input, td select {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  width: 100%;
+  min-width: 80px;
+}
+
+td input:focus, td select:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+/* ===================== SEMAPHORE ===================== */
+.semaphore {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.sem-green { background: rgba(46,204,113,0.15); color: var(--green); }
+.sem-yellow { background: rgba(243,156,18,0.15); color: var(--yellow); }
+.sem-red { background: rgba(214,40,40,0.15); color: var(--red-light); }
+
+/* ===================== SECTION HEADER ===================== */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title .line { flex: 1; height: 1px; background: var(--border); }
+
+/* ===================== PROGRESS BAR ===================== */
+.progress-wrap { margin-top: 6px; }
+.progress-bar-bg { background: var(--surface3); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+/* ===================== MAINTENANCE CARDS ===================== */
+.maint-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 20px; }
+
+.maint-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.maint-card-header {
+  background: var(--red);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.maint-card-title {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700;
+  color: white; letter-spacing: 1px;
+}
+
+.maint-card-km {
+  font-family: var(--font-mono);
+  font-size: 12px; color: rgba(255,255,255,0.8);
+}
+
+.maint-card-body { padding: 16px; }
+
+.maint-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.maint-row:last-child { border-bottom: none; }
+.maint-label { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; }
+.maint-value { font-weight: 600; color: var(--text); }
+
+/* ===================== THERMO CARD ===================== */
+.thermo-card-header { background: #1A3A5C; }
+
+/* ===================== SOLICITUD PRINT ===================== */
+.solicitud-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.solicitud-header {
+  background: var(--red);
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  color: white; letter-spacing: 1px;
+}
+
+.solicitud-row {
+  display: grid;
+  grid-template-columns: 200px 160px 160px 160px;
+  border-bottom: 1px solid var(--border);
+}
+
+.solicitud-cell {
+  padding: 10px 14px;
+  border-right: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.solicitud-cell:last-child { border-right: none; }
+.solicitud-cell.label {
+  background: var(--surface2);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  display: flex; align-items: center;
+}
+
+.solicitud-cell input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  width: 100%;
+}
+.solicitud-cell input:focus { outline: none; }
+
+.total-row {
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 16px;
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 700;
+  border-top: 2px solid var(--red);
+}
+
+.total-value { color: var(--green); font-family: var(--font-mono); }
+
+/* ===================== MODAL ===================== */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  width: 500px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.form-row { margin-bottom: 14px; }
+.form-label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 5px; }
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+.form-input:focus { outline: none; border-color: var(--red); }
+.form-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ===================== CHART BARS ===================== */
+.chart-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 120px; }
+.bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s; position: relative; }
+.bar-label { font-size: 9px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); }
+.bar-val { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--text); font-family: var(--font-mono); white-space: nowrap; }
+
+/* ===================== TABS ===================== */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  padding: 7px 14px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.tab.active { background: var(--red); color: white; border-color: var(--red); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ===================== GAUGE ===================== */
+.gauge-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.gauge-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  flex: 1; min-width: 140px;
+  text-align: center;
+}
+.gauge-val { font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.gauge-name { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono); }
+
+/* ===================== HISTORY TABLE ===================== */
+.scrollable-table { max-height: 400px; overflow-y: auto; }
+
+/* ===================== PRINT STYLES ===================== */
+@media print {
+  .sidebar, .topbar, .topbar-actions, .no-print, .btn, .modal-overlay { display: none !important; }
+  .main { margin-left: 0; }
+  .content { padding: 0; }
+  body { background: white; color: black; }
+  .solicitud-section { border: 1px solid #ccc; }
+  .solicitud-header { background: #D62828 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { display: block !important; }
+  .page:not(#page-solicitud) { display: none !important; }
+  #page-solicitud { display: block !important; }
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-220px); }
+  .main { margin-left: 0; }
+  .cards-row { grid-template-columns: 1fr 1fr; }
+}
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.text-mono { font-family: var(--font-mono); }
+.text-red { color: var(--red-light); }
+.text-green { color: var(--green); }
+.text-yellow { color: var(--yellow); }
+.text-muted { color: var(--text-muted); }
+.fw7 { font-weight: 700; }
+.gap-top { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== MODAL REGISTRAR CARGA ===================== -->
+<div class="modal-overlay" id="modal-carga">
+  <div class="modal">
+    <div class="modal-title">⛽ Registrar Carga de Combustible</div>
+    <div class="form-row">
+      <div class="form-label">Unidad</div>
+      <select class="form-input" id="m-unidad">
+        <option value="nissan">Nissan NP300 (YS-2567-E)</option>
+        <option value="peugeot">Peugeot Partner (YWD-282-D)</option>
+        <option value="hector">Freightliner Hector (YT-0762-E)</option>
+        <option value="mauricio">Freightliner Mauricio (YT-3823-E)</option>
+        <option value="thermo-hector">Thermo T-680 (Hector)</option>
+        <option value="thermo-mauricio">Thermo T-690 (Mauricio)</option>
+        <option value="thermo-nissan">V-300 MAX (Nissan)</option>
+      </select>
+    </div>
+    <div class="form-row-grid">
+      <div class="form-row">
+        <div class="form-label">Fecha</div>
+        <input type="date" class="form-input" id="m-fecha">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Hora</div>
+        <input type="time" class="form-input" id="m-hora">
+      </div>
+    </div>
+    <div class="form-row-grid" id="m-km-section">
+      <div class="form-row">
+        <div class="form-label">Km Inicial</div>
+        <input type="number" class="form-input" id="m-km-ini" placeholder="0">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Km Final</div>
+        <input type="number" class="form-input" id="m-km-fin" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row-grid" id="m-hr-section" style="display:none">
+      <div class="form-row">
+        <div class="form-label">Hora Inicial</div>
+        <input type="number" class="form-input" id="m-hr-ini" placeholder="0">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Hora Final</div>
+        <input type="number" class="form-input" id="m-hr-fin" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row-grid">
+      <div class="form-row">
+        <div class="form-label">Litros</div>
+        <input type="number" class="form-input" id="m-litros" placeholder="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Costo ($)</div>
+        <input type="number" class="form-input" id="m-costo" placeholder="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Cliente / Ruta</div>
+      <input type="text" class="form-input" id="m-cliente" placeholder="Ej. Entregas Locales">
+    </div>
+    <div class="form-row">
+      <div class="form-label">Observaciones</div>
+      <input type="text" class="form-input" id="m-obs" placeholder="">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLoad()">💾 Guardar Registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">A</div>
+      <div>
+        <div class="logo-text">AMAL</div>
+        <div class="logo-sub">Control de Flotilla</div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-label">Módulos</div>
+      <div class="nav-item" onclick="showPage('solicitud')">
+        <span class="icon">⛽</span> Solicitud Combustible
+      </div>
+      <div class="nav-item" onclick="showPage('rendimiento')">
+        <span class="icon">📈</span> Rendimiento
+      </div>
+      <div class="nav-item" onclick="showPage('mantenimiento')">
+        <span class="icon">🔧</span> Mantenimiento Vehicular
+      </div>
+      <div class="nav-item" onclick="showPage('thermos')">
+        <span class="icon">❄️</span> Mantenimiento Thermo
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-theme" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span> <span id="theme-label">Modo Claro</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-heading">Dashboard</div>
+        <div class="topbar-subtitle" id="page-sub">Resumen general del sistema de flotilla</div>
+      </div>
+      <div class="topbar-actions no-print">
+        <button class="btn btn-ghost" onclick="exportData()">📥 Exportar Datos</button>
+        <button class="btn btn-primary" onclick="openModal()">⛽ + Registrar Carga</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ==================== DASHBOARD ==================== -->
+      <div class="page active" id="page-dashboard">
+        <div class="alerts-bar" id="alerts-bar"></div>
+
+        <div class="cards-row">
+          <div class="card card-accent">
+            <div class="card-label">Combustible Semana</div>
+            <div class="card-value" id="dash-combustible">$28,000</div>
+            <div class="card-sub">Total solicitado</div>
+          </div>
+          <div class="card card-green">
+            <div class="card-label">Rendimiento Promedio</div>
+            <div class="card-value" id="dash-rendimiento">5.4</div>
+            <div class="card-sub">km/litro (flota)</div>
+          </div>
+          <div class="card card-yellow">
+            <div class="card-label">Alertas Activas</div>
+            <div class="card-value" id="dash-alertas">3</div>
+            <div class="card-sub">Mantenimientos pendientes</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Unidades Activas</div>
+            <div class="card-value">4</div>
+            <div class="card-sub">Vehículos en operación</div>
+          </div>
+        </div>
+
+        <!-- Status Units -->
+        <div class="section-title">Estado de Unidades <span class="line"></span></div>
+        <div class="maint-grid" id="unit-status-grid"></div>
+
+        <!-- Charts Row -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+          <div class="chart-container">
+            <div class="chart-title">📈 Rendimiento por Unidad (km/l)</div>
+            <div class="bar-chart" id="chart-rendimiento"></div>
+          </div>
+          <div class="chart-container">
+            <div class="chart-title">⛽ Últimas Cargas (litros)</div>
+            <div class="bar-chart" id="chart-consumo"></div>
+          </div>
+        </div>
+
+        <!-- Maintenance Summary -->
+        <div class="section-title">Mantenimiento Resumen <span class="line"></span></div>
+        <div class="maint-grid" id="dash-maint-summary"></div>
+      </div>
+
+      <!-- ==================== SOLICITUD ==================== -->
+      <div class="page" id="page-solicitud">
+        <div class="no-print" style="margin-bottom:16px; display:flex; gap:10px; align-items:center">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Solicitud</button>
+          <span style="font-size:12px; color:var(--text-muted)">Fecha: <strong id="sol-fecha-display"></strong></span>
+          <input type="date" class="form-input no-print" id="sol-fecha" style="width:160px" oninput="updateSolFecha()">
+        </div>
+
+        <!-- Print Header -->
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; padding-bottom:16px; border-bottom:2px solid var(--red)">
+          <div style="background:var(--red); color:white; padding:8px 20px; border-radius:6px; font-family:var(--font-display); font-size:22px; font-weight:700; letter-spacing:2px">AMAL</div>
+          <div>
+            <div style="font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:2px">SOLICITUD DE COMBUSTIBLE</div>
+            <div style="font-size:12px; color:var(--text-muted)" id="sol-fecha-print"></div>
+          </div>
+        </div>
+
+        <!-- MARIA DEL CARMEN -->
+        <div class="solicitud-section">
+          <div class="solicitud-header">MARÍA DEL CARMEN NOVELO BARRERA</div>
+          <div id="sol-mcnb-rows"></div>
+          <div class="total-row">
+            <span>TOTAL</span>
+            <span class="total-value" id="total-mcnb">$0.00</span>
+          </div>
+        </div>
+
+        <!-- INDUSTRIA GASTRONOMICA -->
+        <div class="solicitud-section gap-top">
+          <div class="solicitud-header" style="background:#1A3A5C">INDUSTRIA GASTRONÓMICA</div>
+          <div id="sol-ig-rows"></div>
+          <div class="total-row">
+            <span>TOTAL</span>
+            <span class="total-value" id="total-ig">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== RENDIMIENTO ==================== -->
+      <div class="page" id="page-rendimiento">
+        <div class="tabs" id="rend-tabs"></div>
+        <div id="rend-tab-contents"></div>
+      </div>
+
+      <!-- ==================== MANTENIMIENTO ==================== -->
+      <div class="page" id="page-mantenimiento">
+        <div class="maint-grid" id="maint-cards-container"></div>
+        <div class="table-wrap gap-top">
+          <div class="table-header">
+            <div class="table-title">📋 Historial de Mantenimientos</div>
+          </div>
+          <div class="scrollable-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Unidad</th><th>Fecha</th><th>Tipo</th><th>KM</th><th>Taller</th><th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="maint-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== THERMOS ==================== -->
+      <div class="page" id="page-thermos">
+        <div class="maint-grid" id="thermo-cards-container"></div>
+        <div class="table-wrap gap-top">
+          <div class="table-header">
+            <div class="table-title">❄️ Historial Thermo</div>
+          </div>
+          <div class="scrollable-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Thermo</th><th>Fecha</th><th>Hora Ini</th><th>Hora Fin</th><th>Litros</th><th>Rendimiento</th><th>Importe</th><th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="thermo-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<script>
+/* ===================== DATA STORE ===================== */
+const DB_KEY = 'amal_erp_v2';
+
+const defaultData = {
+  // Maintenance state per vehicle
+  vehicles: {
+    nissan: { name: 'Nissan NP300', plate: 'YS-2567-E', kmActual: 196997, service: 10000, lastService: 188000, lastServiceDate: '23/01/2026', taller: 'CARFIX', history: [{km:188000, fecha:'23/01/2026', tipo:'Serv. Menor', taller:'CARFIX'}] },
+    peugeot: { name: 'Peugeot Partner', plate: 'YWD-282-D', kmActual: 243875, service: 10000, lastService: 230612, lastServiceDate: '23/01/2026', taller: 'CARFIX', history: [{km:230612, fecha:'23/01/2026', tipo:'Serv. Menor', taller:'CARFIX'}] },
+    hector: { name: 'Freightliner Hector', plate: 'YT-0762-E', kmActual: 207332, service: 20000, lastService: 198835, lastServiceDate: '10/10/2025', taller: 'AUTOTAB', history: [{km:198835, fecha:'10/10/2025', tipo:'Serv. Menor', taller:'AUTOTAB'}] },
+    mauricio: { name: 'Freightliner Mauricio', plate: 'YT-3823-E', kmActual: 66322, service: 20000, lastService: 63642, lastServiceDate: '23/03/2026', taller: 'AUTOTAB', history: [{km:63642, fecha:'23/03/2026', tipo:'Serv. Menor', taller:'AUTOTAB'}] },
+  },
+  thermos: {
+    'thermo-hector': { name: 'Thermo T-680', vehicle: 'Freightliner 2018', horasActuales: 7531, service: 1000, lastService: 6438, lastServiceDate: '15/05/2025', history: [] },
+    'thermo-mauricio': { name: 'Thermo T-690', vehicle: 'Freightliner 2024', horasActuales: 2863, service: 1000, lastService: 2726, lastServiceDate: '07/03/2026', history: [] },
+    'thermo-nissan': { name: 'V-300 MAX', vehicle: 'Nissan NP', horasActuales: 2308, service: 500, lastService: 1735, lastServiceDate: '06/02/2026', history: [] },
+  },
+  // Fuel loads history
+  loads: [
+    // NISSAN
+    {id:1,unidad:'nissan',fecha:'05/01/2026',hora:'10:00',cliente:'Entregas Locales',kmIni:185836,kmFin:186182,litros:60.31,costo:1446.79,obs:''},
+    {id:2,unidad:'nissan',fecha:'08/01/2026',hora:'00:00',cliente:'Entregas Locales',kmIni:186182,kmFin:186456,litros:53.09,costo:1273.63,obs:''},
+    {id:3,unidad:'nissan',fecha:'12/01/2026',hora:'09:32',cliente:'Entregas Locales',kmIni:186456,kmFin:186776,litros:59.17,costo:1419.49,obs:''},
+    {id:4,unidad:'nissan',fecha:'15/01/2026',hora:'10:19',cliente:'Entregas Locales',kmIni:186776,kmFin:186909,litros:56.06,costo:1344.88,obs:''},
+    {id:5,unidad:'nissan',fecha:'19/01/2026',hora:'13:50',cliente:'Entregas Locales',kmIni:186909,kmFin:187240,litros:28.36,costo:680.36,obs:''},
+    {id:6,unidad:'nissan',fecha:'20/01/2026',hora:'11:05',cliente:'Entregas Locales',kmIni:187240,kmFin:187548,litros:58.34,costo:1399.58,obs:''},
+    {id:7,unidad:'nissan',fecha:'27/01/2026',hora:'11:27',cliente:'Entregas Locales',kmIni:187548,kmFin:187819,litros:50.43,costo:1209.82,obs:''},
+    {id:8,unidad:'nissan',fecha:'28/01/2026',hora:'10:40',cliente:'Entregas Locales',kmIni:187819,kmFin:187907,litros:15.19,costo:364.41,obs:''},
+    {id:9,unidad:'nissan',fecha:'29/01/2026',hora:'10:33',cliente:'Entregas Locales',kmIni:187907,kmFin:188182,litros:48.33,costo:1159.44,obs:''},
+    {id:10,unidad:'nissan',fecha:'30/01/2026',hora:'10:48',cliente:'Entregas Locales',kmIni:188182,kmFin:188271,litros:16.52,costo:396.31,obs:''},
+    {id:11,unidad:'nissan',fecha:'31/01/2026',hora:'09:34',cliente:'Entregas Locales',kmIni:188271,kmFin:188552,litros:48.90,costo:1173.11,obs:''},
+    {id:12,unidad:'nissan',fecha:'04/02/2026',hora:'10:13',cliente:'Entregas Locales',kmIni:188552,kmFin:188798,litros:55.18,costo:1323.77,obs:''},
+    {id:13,unidad:'nissan',fecha:'05/02/2026',hora:'10:09',cliente:'Entregas Locales',kmIni:188798,kmFin:188866,litros:15.17,costo:363.93,obs:''},
+    {id:14,unidad:'nissan',fecha:'10/02/2026',hora:'12:02',cliente:'Entregas Locales',kmIni:188866,kmFin:189123,litros:51.70,costo:1240.28,obs:''},
+    {id:15,unidad:'nissan',fecha:'12/02/2026',hora:'11:44',cliente:'Entregas Locales',kmIni:189123,kmFin:189453,litros:46.46,costo:1114.58,obs:'Viaje a Piste.'},
+    {id:16,unidad:'nissan',fecha:'16/02/2026',hora:'12:07',cliente:'Entregas Locales',kmIni:189453,kmFin:189840,litros:54.89,costo:1316.81,obs:''},
+    {id:17,unidad:'nissan',fecha:'18/02/2026',hora:'11:39',cliente:'Entregas Locales',kmIni:189840,kmFin:190092,litros:42.02,costo:1008.06,obs:''},
+    {id:18,unidad:'nissan',fecha:'18/02/2026',hora:'15:25',cliente:'Entregas Locales',kmIni:190092,kmFin:190347,litros:56.93,costo:1365.75,obs:'Viaje a Piste y Hotel Chichen Itz'},
+    {id:19,unidad:'nissan',fecha:'23/02/2026',hora:'13:04',cliente:'Entregas Locales',kmIni:190347,kmFin:190669,litros:51.67,costo:1239.56,obs:''},
+    {id:20,unidad:'nissan',fecha:'26/02/2026',hora:'15:31',cliente:'Entregas Locales',kmIni:190669,kmFin:191028,litros:55.55,costo:1332.64,obs:''},
+    {id:21,unidad:'nissan',fecha:'02/03/2026',hora:'10:57',cliente:'Entregas Locales',kmIni:191028,kmFin:191206,litros:30.72,costo:736.97,obs:''},
+    {id:22,unidad:'nissan',fecha:'04/03/2026',hora:'10:20',cliente:'Entregas Locales',kmIni:191206,kmFin:191564,litros:38.79,costo:930.57,obs:''},
+    {id:23,unidad:'nissan',fecha:'06/03/2026',hora:'10:23',cliente:'Entregas Locales',kmIni:191564,kmFin:191898,litros:54.75,costo:1313.45,obs:''},
+    {id:24,unidad:'nissan',fecha:'12/03/2026',hora:'09:43',cliente:'Entregas Locales',kmIni:191898,kmFin:192262,litros:45.85,costo:1099.94,obs:''},
+    {id:25,unidad:'nissan',fecha:'18/03/2026',hora:'11:30',cliente:'Entregas Locales',kmIni:192262,kmFin:192984,litros:51.49,costo:1235.25,obs:'Viaje a Motul'},
+    {id:26,unidad:'nissan',fecha:'20/03/2026',hora:'10:00',cliente:'Entregas Locales',kmIni:192984,kmFin:193285,litros:42.03,costo:1008.30,obs:''},
+    {id:27,unidad:'nissan',fecha:'26/03/2026',hora:'10:55',cliente:'Entregas Locales',kmIni:193285,kmFin:193604,litros:37.07,costo:889.31,obs:'viaje a piste'},
+    {id:28,unidad:'nissan',fecha:'28/03/2026',hora:'10:25',cliente:'Entregas Locales',kmIni:193604,kmFin:194018,litros:44.48,costo:1067.08,obs:'carga complementaria'},
+    {id:29,unidad:'nissan',fecha:'30/03/2026',hora:'10:55',cliente:'Entregas Locales',kmIni:194018,kmFin:194272,litros:38.56,costo:925.05,obs:'carga complementaria'},
+    {id:30,unidad:'nissan',fecha:'01/04/2026',hora:'10:56',cliente:'Entregas Locales',kmIni:194272,kmFin:194521,litros:32.68,costo:783.99,obs:'viaje a izamal'},
+    {id:31,unidad:'nissan',fecha:'02/04/2026',hora:'09:04',cliente:'Entregas Locales',kmIni:194521,kmFin:194804,litros:38.52,costo:924.09,obs:''},
+    {id:32,unidad:'nissan',fecha:'06/04/2026',hora:'11:46',cliente:'Entregas Locales',kmIni:194804,kmFin:194990,litros:26.53,costo:636.45,obs:''},
+    {id:33,unidad:'nissan',fecha:'09/04/2026',hora:'12:21',cliente:'Entregas Locales',kmIni:194990,kmFin:195339,litros:51.51,costo:1235.72,obs:''},
+    {id:34,unidad:'nissan',fecha:'11/04/2026',hora:'11:22',cliente:'Entregas Locales',kmIni:195339,kmFin:195700,litros:55.45,costo:1330.25,obs:''},
+    {id:35,unidad:'nissan',fecha:'16/04/2026',hora:'13:27',cliente:'Entregas Locales',kmIni:195700,kmFin:195997,litros:47.43,costo:1137.85,obs:''},
+    {id:36,unidad:'nissan',fecha:'18/04/2026',hora:'09:08',cliente:'Entregas Locales',kmIni:195997,kmFin:196335,litros:51.11,costo:1226.13,obs:''},
+    {id:37,unidad:'nissan',fecha:'22/04/2026',hora:'11:10',cliente:'Entregas Locales',kmIni:196335,kmFin:196668,litros:48.06,costo:1152.96,obs:''},
+    {id:38,unidad:'nissan',fecha:'24/04/2026',hora:'08:51',cliente:'Entregas Locales',kmIni:196668,kmFin:196999,litros:57.29,costo:1374.39,obs:''},
+    {id:39,unidad:'nissan',fecha:'27/04/2026',hora:'08:35',cliente:'Entregas Locales',kmIni:196999,kmFin:197368,litros:38.31,costo:319.06,obs:''},
+    {id:40,unidad:'nissan',fecha:'28/04/2026',hora:'09:00',cliente:'Entregas Locales',kmIni:197368,kmFin:197508,litros:39.92,costo:957.68,obs:''},
+    {id:41,unidad:'nissan',fecha:'30/04/2026',hora:'09:34',cliente:'Entregas Locales',kmIni:197508,kmFin:197846,litros:47.25,costo:1133.53,obs:''},
+    {id:42,unidad:'nissan',fecha:'02/05/2026',hora:'09:00',cliente:'Entregas Locales',kmIni:197846,kmFin:198163,litros:45.64,costo:1094.90,obs:''},
+    // PEUGEOT
+    {id:100,unidad:'peugeot',fecha:'02/01/2026',hora:'11:36',cliente:'Entregas Locales',kmIni:236315,kmFin:236949,litros:47.46,costo:1299.93,obs:''},
+    {id:101,unidad:'peugeot',fecha:'08/01/2026',hora:'10:52',cliente:'Entregas Locales',kmIni:236949,kmFin:237553,litros:45.84,costo:1254.31,obs:''},
+    {id:102,unidad:'peugeot',fecha:'13/01/2026',hora:'09:36',cliente:'Entregas Locales',kmIni:237553,kmFin:238245,litros:48.01,costo:1314.58,obs:''},
+    {id:103,unidad:'peugeot',fecha:'12/02/2026',hora:'09:36',cliente:'Entregas Locales',kmIni:238245,kmFin:238918,litros:47.64,costo:1304.86,obs:''},
+    {id:104,unidad:'peugeot',fecha:'21/02/2026',hora:'13:11',cliente:'Entregas Locales',kmIni:238918,kmFin:239594,litros:48.36,costo:1324.58,obs:''},
+    {id:105,unidad:'peugeot',fecha:'04/03/2026',hora:'11:06',cliente:'Entregas Locales',kmIni:239594,kmFin:240294,litros:47.46,costo:1299.93,obs:''},
+    {id:106,unidad:'peugeot',fecha:'16/03/2026',hora:'11:05',cliente:'Entregas Locales',kmIni:240294,kmFin:241563,litros:44.38,costo:1299.89,obs:''},
+    {id:107,unidad:'peugeot',fecha:'28/03/2026',hora:'09:33',cliente:'Entregas Locales',kmIni:241563,kmFin:242121,litros:47.13,costo:1387.51,obs:''},
+    {id:108,unidad:'peugeot',fecha:'08/04/2026',hora:'13:33',cliente:'Entregas Locales',kmIni:242121,kmFin:242831,litros:50.12,costo:1447.47,obs:''},
+    {id:109,unidad:'peugeot',fecha:'17/04/2026',hora:'10:06',cliente:'Entregas Locales',kmIni:242831,kmFin:243418,litros:40.32,costo:1152.35,obs:''},
+    {id:110,unidad:'peugeot',fecha:'25/04/2026',hora:'09:57',cliente:'Entregas Locales',kmIni:243418,kmFin:243972,litros:48.13,costo:1347.64,obs:''},
+    // HECTOR
+    {id:200,unidad:'hector',fecha:'05/01/2026',hora:'10:51',cliente:'Entregas Locales',kmIni:200669,kmFin:201224,litros:146.04,costo:4000.04,obs:''},
+    {id:201,unidad:'hector',fecha:'16/01/2026',hora:'10:44',cliente:'Entregas Locales',kmIni:201224,kmFin:202705,litros:146.04,costo:4000.04,obs:''},
+    {id:202,unidad:'hector',fecha:'24/01/2026',hora:'09:46',cliente:'Entregas Locales',kmIni:202705,kmFin:203363,litros:164.29,costo:4500.43,obs:''},
+    {id:203,unidad:'hector',fecha:'14/02/2026',hora:'14:14',cliente:'Entregas Locales',kmIni:203363,kmFin:203929,litros:164.29,costo:4499.90,obs:''},
+    {id:204,unidad:'hector',fecha:'16/02/2026',hora:'12:24',cliente:'Entregas Locales',kmIni:203929,kmFin:204483,litros:121.49,costo:3327.61,obs:''},
+    {id:205,unidad:'hector',fecha:'27/02/2026',hora:'10:23',cliente:'Entregas Locales',kmIni:204483,kmFin:204992,litros:142.57,costo:3904.90,obs:''},
+    {id:206,unidad:'hector',fecha:'12/03/2026',hora:'09:52',cliente:'Entregas Locales',kmIni:204992,kmFin:205605,litros:138.46,costo:4000.11,obs:''},
+    {id:207,unidad:'hector',fecha:'14/03/2026',hora:'09:44',cliente:'Entregas Locales',kmIni:205605,kmFin:206114,litros:146.61,costo:4499.98,obs:''},
+    {id:208,unidad:'hector',fecha:'25/04/2026',hora:'11:39',cliente:'Entregas Locales',kmIni:206752,kmFin:207424,litros:160.92,costo:4505.76,obs:''},
+    // MAURICIO
+    {id:300,unidad:'mauricio',fecha:'05/12/2026',hora:'08:13',cliente:'Entregas Locales',kmIni:57996,kmFin:58819,litros:146.04,costo:4000.04,obs:''},
+    {id:301,unidad:'mauricio',fecha:'10/12/2026',hora:'08:50',cliente:'Entregas Locales',kmIni:58819,kmFin:59520,litros:157.03,costo:4000.04,obs:''},
+    {id:302,unidad:'mauricio',fecha:'14/01/2026',hora:'06:43',cliente:'Entregas Locales',kmIni:59520,kmFin:59864,litros:76.24,costo:2088.21,obs:''},
+    {id:303,unidad:'mauricio',fecha:'16/01/2026',hora:'11:04',cliente:'Entregas Locales',kmIni:59864,kmFin:60438,litros:135.27,costo:3700.68,obs:''},
+    {id:304,unidad:'mauricio',fecha:'21/01/2026',hora:'12:32',cliente:'Entregas Locales',kmIni:60438,kmFin:60836,litros:80.33,costo:2200.24,obs:''},
+    {id:305,unidad:'mauricio',fecha:'26/01/2026',hora:'09:07',cliente:'Entregas Locales',kmIni:60836,kmFin:61503,litros:147.88,costo:4050.43,obs:''},
+    {id:306,unidad:'mauricio',fecha:'30/01/2026',hora:'09:07',cliente:'Entregas Locales',kmIni:61503,kmFin:62148,litros:149.69,costo:4100.43,obs:''},
+    {id:307,unidad:'mauricio',fecha:'11/02/2026',hora:'13:18',cliente:'Entregas Locales',kmIni:62148,kmFin:62904,litros:175.26,costo:4800.37,obs:''},
+    {id:308,unidad:'mauricio',fecha:'19/02/2026',hora:'13:01',cliente:'Entregas Locales',kmIni:62904,kmFin:63613,litros:195.70,costo:5153.59,obs:''},
+    {id:309,unidad:'mauricio',fecha:'12/03/2026',hora:'09:03',cliente:'Entregas Locales',kmIni:63613,kmFin:64225,litros:140.54,costo:4060.20,obs:''},
+    {id:310,unidad:'mauricio',fecha:'27/03/2026',hora:'10:14',cliente:'Entregas Locales',kmIni:64225,kmFin:64893,litros:144.37,costo:4250.25,obs:''},
+    {id:311,unidad:'mauricio',fecha:'09/04/2026',hora:'13:59',cliente:'Entregas Locales',kmIni:64893,kmFin:65583,litros:148.9,costo:4100.25,obs:''},
+    {id:312,unidad:'mauricio',fecha:'24/04/2026',hora:'09:47',cliente:'Entregas Locales',kmIni:65583,kmFin:66322,litros:160.98,costo:4507.44,obs:''},
+    // THERMO HECTOR
+    {id:400,unidad:'thermo-hector',fecha:'16/01/2026',hora:'10:50',hrIni:7064,hrFin:7297,litros:200,costo:2317.52,obs:''},
+    {id:401,unidad:'thermo-hector',fecha:'05/02/2026',hora:'14:01',hrIni:7264,hrFin:7297,litros:33,costo:2066.85,obs:''},
+    {id:402,unidad:'thermo-hector',fecha:'26/02/2026',hora:'09:37',hrIni:7292,hrFin:7292,litros:0,costo:2533.04,obs:''},
+    {id:403,unidad:'thermo-hector',fecha:'25/03/2026',hora:'09:30',hrIni:0,hrFin:0,litros:0,costo:2499.90,obs:''},
+    {id:404,unidad:'thermo-hector',fecha:'13/04/2026',hora:'09:00',hrIni:0,hrFin:7470,litros:0,costo:2464.91,obs:''},
+    {id:405,unidad:'thermo-hector',fecha:'24/04/2026',hora:'10:16',hrIni:7470,hrFin:7506,litros:36,costo:2389.80,obs:''},
+    // THERMO MAURICIO
+    {id:500,unidad:'thermo-mauricio',fecha:'02/01/2026',hora:'10:20',hrIni:2429,hrFin:2487,litros:58,costo:2317.52,obs:''},
+    {id:501,unidad:'thermo-mauricio',fecha:'06/01/2026',hora:'06:48',hrIni:2487,hrFin:2540,litros:53,costo:2173.64,obs:''},
+    {id:502,unidad:'thermo-mauricio',fecha:'03/02/2026',hora:'10:33',hrIni:2540,hrFin:2602,litros:62,costo:2511.06,obs:''},
+    {id:503,unidad:'thermo-mauricio',fecha:'19/02/2026',hora:'11:21',hrIni:2602,hrFin:2663,litros:61,costo:2450.31,obs:''},
+    {id:504,unidad:'thermo-mauricio',fecha:'13/03/2026',hora:'13:18',hrIni:2663,hrFin:2714,litros:51,costo:2500.10,obs:''},
+    {id:505,unidad:'thermo-mauricio',fecha:'06/04/2026',hora:'11:01',hrIni:2714,hrFin:2773,litros:59,costo:2500.10,obs:''},
+    {id:506,unidad:'thermo-mauricio',fecha:'24/04/2026',hora:'09:52',hrIni:2773,hrFin:2831,litros:58,costo:2100.12,obs:''},
+  ],
+  // Solicitud state
+  solicitud: {
+    fecha: new Date().toISOString().split('T')[0],
+    mcnb: [
+      { unidad:'FREIGHTLINER YT-0762-E (Hector)', saldo:0, solicitud:4500, requerido:4500 },
+      { unidad:'THERMO T-680', saldo:0, solicitud:2500, requerido:2500 },
+      { unidad:'NISSAN NP 300', saldo:0, solicitud:4500, requerido:4500 },
+      { unidad:'PEUGEOT PARTNER', saldo:100, solicitud:2500, requerido:2600 },
+    ],
+    ig: [
+      { unidad:'FREIGHTLINER YT-3823-E (Mauricio)', saldo:0, solicitud:4500, requerido:4500 },
+      { unidad:'THERMO T-690 R50', saldo:0, solicitud:2500, requerido:2500 },
+    ]
+  }
+};
+
+// Load / save
+function loadData() {
+  try {
+    const s = localStorage.getItem(DB_KEY);
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(defaultData));
+  } catch(e) { return JSON.parse(JSON.stringify(defaultData)); }
+}
+
+function saveData() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let db = loadData();
+// If first load, init with defaults
+if (!db.loads || db.loads.length === 0) {
+  db = JSON.parse(JSON.stringify(defaultData));
+  saveData();
+}
+
+/* ===================== NAVIGATION ===================== */
+const pageNames = {
+  dashboard: ['Dashboard', 'Resumen general del sistema de flotilla'],
+  solicitud: ['Solicitud de Combustible', 'Formatos editables e imprimibles por razón social'],
+  rendimiento: ['Rendimiento de Combustible', 'Historial de cargas y métricas por unidad'],
+  mantenimiento: ['Mantenimiento Vehicular', 'Control de servicios por kilómetros'],
+  thermos: ['Mantenimiento Thermo', 'Control de servicios por horas de operación'],
+};
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes("'" + p + "'")) el.classList.add('active');
+  });
+  document.getElementById('page-heading').textContent = pageNames[p][0];
+  document.getElementById('page-sub').textContent = pageNames[p][1];
+  renderPage(p);
+}
+
+function renderPage(p) {
+  if (p === 'dashboard') renderDashboard();
+  if (p === 'solicitud') renderSolicitud();
+  if (p === 'rendimiento') renderRendimiento();
+  if (p === 'mantenimiento') renderMantenimiento();
+  if (p === 'thermos') renderThermos();
+}
+
+/* ===================== CALCULATIONS ===================== */
+function getVehicleLoads(unidad) {
+  return db.loads.filter(l => l.unidad === unidad).sort((a,b) => parseFecha(a.fecha) - parseFecha(b.fecha));
+}
+
+function parseFecha(f) {
+  if (!f) return 0;
+  const parts = f.split('/');
+  if (parts.length === 3) return new Date(+parts[2], +parts[1]-1, +parts[0]);
+  return new Date(f);
+}
+
+function calcRendimiento(load) {
+  const km = (load.kmFin || 0) - (load.kmIni || 0);
+  if (load.hrFin && load.hrIni && (load.hrFin - load.hrIni) > 0 && load.litros > 0) {
+    return ((load.hrFin - load.hrIni) / load.litros).toFixed(2);
+  }
+  if (km > 0 && load.litros > 0) return (km / load.litros).toFixed(2);
+  return '-';
+}
+
+function getRendIndicator(rend, isThermo) {
+  const r = parseFloat(rend);
+  if (isNaN(r)) return { cls: '', label: '-' };
+  if (isThermo) {
+    if (r >= 1.5) return { cls: 'sem-green', label: '🟢 Óptimo' };
+    if (r >= 0.8) return { cls: 'sem-yellow', label: '🟡 Bajo' };
+    return { cls: 'sem-red', label: '🔴 Crítico' };
+  } else {
+    if (r >= 5) return { cls: 'sem-green', label: '🟢 Óptimo' };
+    if (r >= 3) return { cls: 'sem-yellow', label: '🟡 Bajo' };
+    return { cls: 'sem-red', label: '🔴 Crítico' };
+  }
+}
+
+function getVehicleStatus(vkey) {
+  const v = db.vehicles[vkey];
+  const diff = v.kmActual - v.lastService;
+  const remaining = v.service - diff;
+  const pct = Math.min(100, (diff / v.service) * 100);
+  let status, cls;
+  if (remaining < 0) { status = 'Vencido'; cls = 'sem-red'; }
+  else if (remaining < v.service * 0.15) { status = 'Próximo'; cls = 'sem-yellow'; }
+  else { status = 'Al día'; cls = 'sem-green'; }
+  return { remaining, pct, status, cls };
+}
+
+function getThermoStatus(tkey) {
+  const t = db.thermos[tkey];
+  const diff = t.horasActuales - t.lastService;
+  const remaining = t.service - diff;
+  const pct = Math.min(100, (diff / t.service) * 100);
+  let status, cls;
+  if (remaining < 0) { status = 'Vencido'; cls = 'sem-red'; }
+  else if (remaining < t.service * 0.1) { status = 'Próximo'; cls = 'sem-yellow'; }
+  else { status = 'Al día'; cls = 'sem-green'; }
+  return { remaining, pct, status, cls };
+}
+
+function avgRendimientoForVehicle(vkey) {
+  const loads = getVehicleLoads(vkey).filter(l => l.kmFin && l.kmIni && l.litros);
+  if (!loads.length) return 0;
+  const rends = loads.map(l => (l.kmFin - l.kmIni) / l.litros).filter(r => r > 0);
+  if (!rends.length) return 0;
+  return (rends.reduce((a,b)=>a+b,0)/rends.length).toFixed(1);
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard() {
+  renderAlerts();
+  renderUnitStatusGrid();
+  renderDashMaintSummary();
+  renderCharts();
+}
+
+function renderAlerts() {
+  const bar = document.getElementById('alerts-bar');
+  const alerts = [];
+
+  // Vehicle maintenance
+  Object.entries(db.vehicles).forEach(([k,v]) => {
+    const s = getVehicleStatus(k);
+    if (s.status === 'Vencido') alerts.push({ cls:'alert-red', text: `⚠️ ${v.name} — Mantenimiento VENCIDO` });
+    else if (s.status === 'Próximo') alerts.push({ cls:'alert-yellow', text: `⏰ ${v.name} — Mantenimiento próximo (${s.remaining} km)` });
+  });
+
+  // Thermo maintenance
+  Object.entries(db.thermos).forEach(([k,t]) => {
+    const s = getThermoStatus(k);
+    if (s.status === 'Vencido') alerts.push({ cls:'alert-red', text: `❄️ ${t.name} — Servicio VENCIDO` });
+    else if (s.status === 'Próximo') alerts.push({ cls:'alert-yellow', text: `❄️ ${t.name} — Servicio próximo (${s.remaining} hrs)` });
+  });
+
+  if (!alerts.length) alerts.push({ cls:'alert-green', text: '✅ Todo en orden — Sin alertas críticas' });
+
+  document.getElementById('dash-alertas').textContent = alerts.filter(a=>a.cls!=='alert-green').length || 0;
+  bar.innerHTML = alerts.map(a => `<span class="alert-chip ${a.cls}">${a.text}</span>`).join('');
+}
+
+function renderUnitStatusGrid() {
+  const grid = document.getElementById('unit-status-grid');
+  const vkeys = ['nissan','peugeot','hector','mauricio'];
+  const colors = { nissan:'#2ECC71', peugeot:'#E67E22', hector:'#D62828', mauricio:'#D62828' };
+
+  grid.innerHTML = vkeys.map(k => {
+    const v = db.vehicles[k];
+    const s = getVehicleStatus(k);
+    const avg = avgRendimientoForVehicle(k);
+    const barColor = s.status === 'Vencido' ? '#D62828' : s.status === 'Próximo' ? '#F39C12' : '#2ECC71';
+    return `
+    <div class="card" style="border-left:3px solid ${colors[k]}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="card-label">${v.name}</div>
+        <span class="semaphore ${s.cls}">${s.status}</span>
+      </div>
+      <div class="card-value" style="font-size:22px">${v.plate}</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>Km Actual</span><strong class="text-mono">${v.kmActual.toLocaleString()}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>Próx. Servicio</span><strong class="text-mono">${(v.lastService + v.service).toLocaleString()}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span>Rendimiento Prom.</span><strong class="text-green">${avg} km/l</strong>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${s.pct}%;background:${barColor}"></div>
+        </div>
+        <div style="text-align:right;font-size:10px;margin-top:2px;color:var(--text-muted)">${Math.round(s.pct)}% del ciclo</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashMaintSummary() {
+  const el = document.getElementById('dash-maint-summary');
+  const tkeys = ['thermo-hector','thermo-mauricio','thermo-nissan'];
+
+  el.innerHTML = tkeys.map(k => {
+    const t = db.thermos[k];
+    const s = getThermoStatus(k);
+    const barColor = s.status === 'Vencido' ? '#D62828' : s.status === 'Próximo' ? '#F39C12' : '#2ECC71';
+    return `
+    <div class="card" style="border-left:3px solid #1A7AC8">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="card-label">${t.name}</div>
+        <span class="semaphore ${s.cls}">${s.status}</span>
+      </div>
+      <div class="card-value" style="font-size:20px">${t.horasActuales} hrs</div>
+      <div class="card-sub">${t.vehicle}</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-muted)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>Último servicio</span><strong>${t.lastServiceDate}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span>Próximo en</span><strong class="text-mono">${s.remaining > 0 ? s.remaining + ' hrs' : 'Vencido'}</strong>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${s.pct}%;background:${barColor}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCharts() {
+  // Rendimiento chart
+  const rendChart = document.getElementById('chart-rendimiento');
+  const units = [
+    { key:'nissan', label:'Nissan' },
+    { key:'peugeot', label:'Peugeot' },
+    { key:'hector', label:'Hector' },
+    { key:'mauricio', label:'Mauricio' },
+  ];
+  const maxR = 12;
+  const colors = ['#2ECC71','#E67E22','#D62828','#E74C3C'];
+
+  rendChart.innerHTML = units.map((u, i) => {
+    const avg = parseFloat(avgRendimientoForVehicle(u.key)) || 0;
+    const h = Math.round((avg / maxR) * 100);
+    return `
+    <div class="bar-group">
+      <div class="bar" style="height:${h}px;background:${colors[i]};position:relative">
+        <div class="bar-val">${avg}</div>
+      </div>
+      <div class="bar-label">${u.label}</div>
+    </div>`;
+  }).join('');
+
+  // Last loads chart
+  const consumoChart = document.getElementById('chart-consumo');
+  const lastLoads = [...db.loads].sort((a,b) => b.id - a.id).slice(0, 8).reverse();
+  const maxL = Math.max(...lastLoads.map(l => l.litros), 1);
+
+  consumoChart.innerHTML = lastLoads.map(l => {
+    const h = Math.round((l.litros / maxL) * 100);
+    const name = l.unidad === 'nissan' ? 'NP' : l.unidad === 'peugeot' ? 'PG' : l.unidad === 'hector' ? 'HE' : l.unidad === 'mauricio' ? 'MA' : 'TH';
+    return `
+    <div class="bar-group">
+      <div class="bar" style="height:${h}px;background:#D62828;position:relative">
+        <div class="bar-val">${l.litros}</div>
+      </div>
+      <div class="bar-label">${name}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== SOLICITUD ===================== */
+function renderSolicitud() {
+  const d = db.solicitud;
+  document.getElementById('sol-fecha').value = d.fecha;
+  updateSolFecha();
+  renderSolRows('sol-mcnb-rows', d.mcnb, 'mcnb');
+  renderSolRows('sol-ig-rows', d.ig, 'ig');
+  calcSolTotals();
+}
+
+function updateSolFecha() {
+  const v = document.getElementById('sol-fecha').value;
+  db.solicitud.fecha = v;
+  const display = v ? new Date(v+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}) : '';
+  document.getElementById('sol-fecha-display').textContent = display;
+  document.getElementById('sol-fecha-print').textContent = 'Fecha: ' + display;
+  saveData();
+}
+
+function renderSolRows(containerId, rows, group) {
+  const hdr = `
+  <div class="solicitud-row" style="background:var(--surface2)">
+    <div class="solicitud-cell label">Unidad</div>
+    <div class="solicitud-cell label" style="background:#FFD700;color:#333">Saldo</div>
+    <div class="solicitud-cell label" style="background:#92D050;color:#333">Solicitud</div>
+    <div class="solicitud-cell label" style="background:#92D050;color:#333">Requerido</div>
+  </div>`;
+
+  const rowsHtml = rows.map((r,i) => `
+  <div class="solicitud-row">
+    <div class="solicitud-cell" style="font-weight:700;color:var(--red-light)">${r.unidad}</div>
+    <div class="solicitud-cell"><input type="number" value="${r.saldo}" oninput="updateSol('${group}',${i},'saldo',this.value)" placeholder="0"></div>
+    <div class="solicitud-cell"><input type="number" value="${r.solicitud}" oninput="updateSol('${group}',${i},'solicitud',this.value)" placeholder="0"></div>
+    <div class="solicitud-cell"><input type="number" value="${r.requerido}" oninput="updateSol('${group}',${i},'requerido',this.value)" placeholder="0"></div>
+  </div>`).join('');
+
+  document.getElementById(containerId).innerHTML = hdr + rowsHtml;
+}
+
+function updateSol(group, idx, field, val) {
+  db.solicitud[group][idx][field] = parseFloat(val) || 0;
+  if (field === 'saldo' || field === 'solicitud') {
+    db.solicitud[group][idx].requerido = (db.solicitud[group][idx].saldo || 0) + (db.solicitud[group][idx].solicitud || 0);
+    renderSolicitud();
+  }
+  calcSolTotals();
+  saveData();
+}
+
+function calcSolTotals() {
+  const mcnbTotal = db.solicitud.mcnb.reduce((s,r) => s + (r.requerido || 0), 0);
+  const igTotal = db.solicitud.ig.reduce((s,r) => s + (r.requerido || 0), 0);
+  document.getElementById('total-mcnb').textContent = '$' + mcnbTotal.toLocaleString('es-MX', {minimumFractionDigits:2});
+  document.getElementById('total-ig').textContent = '$' + igTotal.toLocaleString('es-MX', {minimumFractionDigits:2});
+  document.getElementById('dash-combustible').textContent = '$' + (mcnbTotal + igTotal).toLocaleString('es-MX', {minimumFractionDigits:0});
+}
+
+/* ===================== RENDIMIENTO ===================== */
+function renderRendimiento() {
+  const units = [
+    { key:'nissan', label:'Nissan NP300', plate:'YS-2567-E', isThermo:false },
+    { key:'peugeot', label:'Peugeot Partner', plate:'YWD-282-D', isThermo:false },
+    { key:'hector', label:'Freightliner Hector', plate:'YT-0762-E', isThermo:false },
+    { key:'mauricio', label:'Freightliner Mauricio', plate:'YT-3823-E', isThermo:false },
+    { key:'thermo-hector', label:'Thermo T-680', plate:'→ Hector', isThermo:true },
+    { key:'thermo-mauricio', label:'Thermo T-690', plate:'→ Mauricio', isThermo:true },
+  ];
+
+  const tabsEl = document.getElementById('rend-tabs');
+  const contEl = document.getElementById('rend-tab-contents');
+
+  tabsEl.innerHTML = units.map((u,i) => `
+    <div class="tab ${i===0?'active':''}" onclick="switchRendTab(${i})">${u.label}</div>
+  `).join('');
+
+  contEl.innerHTML = units.map((u,i) => `
+    <div class="tab-content ${i===0?'active':''}" id="rend-tab-${i}">
+      ${buildRendTable(u)}
+    </div>
+  `).join('');
+}
+
+function switchRendTab(i) {
+  document.querySelectorAll('#rend-tabs .tab').forEach((el,j) => el.classList.toggle('active', j===i));
+  document.querySelectorAll('#rend-tab-contents .tab-content').forEach((el,j) => el.classList.toggle('active', j===i));
+}
+
+function buildRendTable(u) {
+  const loads = getVehicleLoads(u.key);
+  const isThermo = u.isThermo;
+
+  const avg = isThermo ? '—' : avgRendimientoForVehicle(u.key);
+  const header = `
+  <div class="table-wrap">
+    <div class="table-header">
+      <div class="table-title">📊 ${u.label} <span class="badge badge-blue">${u.plate}</span></div>
+      <span style="font-size:12px;color:var(--text-muted)">Rendimiento prom: <strong class="text-green">${avg} ${isThermo ? 'hrs/l' : 'km/l'}</strong></span>
+    </div>
+    <div class="scrollable-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Hora</th><th>Cliente</th>
+            ${isThermo ? '<th>Hr Ini</th><th>Hr Fin</th>' : '<th>Km Ini</th><th>Km Fin</th>'}
+            <th>${isThermo ? 'Hrs' : 'Km Rec.'}</th>
+            <th>Litros</th><th>Rendimiento</th><th>Costo</th><th>Estado</th><th>Obs.</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  const rows = loads.map(l => {
+    const rend = calcRendimiento(l);
+    const ind = getRendIndicator(rend, isThermo);
+    const recorrido = isThermo
+      ? ((l.hrFin||0) - (l.hrIni||0))
+      : ((l.kmFin||0) - (l.kmIni||0));
+    return `
+    <tr>
+      <td class="text-mono">${l.fecha}</td>
+      <td class="text-mono">${l.hora||''}</td>
+      <td>${l.cliente||''}</td>
+      <td class="text-mono">${isThermo ? (l.hrIni||0) : (l.kmIni||0).toLocaleString()}</td>
+      <td class="text-mono">${isThermo ? (l.hrFin||0) : (l.kmFin||0).toLocaleString()}</td>
+      <td class="text-mono fw7">${recorrido > 0 ? recorrido.toLocaleString() : '—'}</td>
+      <td class="text-mono">${l.litros || 0}</td>
+      <td class="text-mono fw7">${rend}</td>
+      <td class="text-mono">$${(l.costo||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      <td><span class="semaphore ${ind.cls}" style="font-size:10px">${ind.label}</span></td>
+      <td style="max-width:160px;white-space:normal;font-size:11px;color:var(--text-muted)">${l.obs||''}</td>
+    </tr>`;
+  }).join('');
+
+  return header + rows + `</tbody></table></div></div>`;
+}
+
+/* ===================== MANTENIMIENTO ===================== */
+function renderMantenimiento() {
+  const container = document.getElementById('maint-cards-container');
+
+  container.innerHTML = Object.entries(db.vehicles).map(([k,v]) => {
+    const s = getVehicleStatus(k);
+    const nextKm = v.lastService + v.service;
+    const barColor = s.status === 'Vencido' ? '#D62828' : s.status === 'Próximo' ? '#F39C12' : '#2ECC71';
+
+    return `
+    <div class="maint-card">
+      <div class="maint-card-header">
+        <div class="maint-card-title">${v.name}</div>
+        <div class="maint-card-km">${v.plate} | Km: ${v.kmActual.toLocaleString()}</div>
+      </div>
+      <div class="maint-card-body">
+        <div class="maint-row">
+          <span class="maint-label">Estado</span>
+          <span class="semaphore ${s.cls}">${s.status}</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Intervalo</span>
+          <span class="maint-value">Cada ${v.service.toLocaleString()} km</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Último Servicio</span>
+          <span class="maint-value">${v.lastServiceDate} — ${v.lastService.toLocaleString()} km</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Taller</span>
+          <span class="maint-value">${v.taller}</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Próximo Servicio</span>
+          <span class="maint-value text-mono">${nextKm.toLocaleString()} km</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Km Restantes</span>
+          <span class="maint-value" style="color:${barColor}">${s.remaining > 0 ? s.remaining.toLocaleString() + ' km' : '⚠️ Vencido por ' + Math.abs(s.remaining).toLocaleString() + ' km'}</span>
+        </div>
+        <div class="progress-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:4px">
+            <span>${v.lastService.toLocaleString()}</span><span>${nextKm.toLocaleString()}</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width:${s.pct}%;background:${barColor}"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost" style="font-size:11px;flex:1" onclick="registerMaint('${k}')">+ Registrar Servicio</button>
+          <button class="btn btn-primary" style="font-size:11px" onclick="updateKm('${k}')">📍 Actualizar Km</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // History table
+  const tbody = document.getElementById('maint-history-body');
+  const rows = [];
+  Object.entries(db.vehicles).forEach(([k,v]) => {
+    v.history.forEach(h => {
+      rows.push({ ...h, vname: v.name, plate: v.plate });
+    });
+  });
+  rows.sort((a,b) => parseFecha(b.fecha) - parseFecha(a.fecha));
+
+  tbody.innerHTML = rows.map(r => `
+  <tr>
+    <td><strong>${r.vname}</strong></td>
+    <td class="text-mono">${r.fecha}</td>
+    <td>${r.tipo}</td>
+    <td class="text-mono">${(r.km||0).toLocaleString()} km</td>
+    <td>${r.taller||'—'}</td>
+    <td><span class="semaphore sem-green">✅ Completado</span></td>
+  </tr>`).join('');
+}
+
+function registerMaint(vkey) {
+  const v = db.vehicles[vkey];
+  const fecha = prompt(`Registrar servicio para ${v.name}\nFecha (DD/MM/AAAA):`, new Date().toLocaleDateString('es-MX'));
+  if (!fecha) return;
+  const taller = prompt('Taller:', v.taller);
+  if (taller === null) return;
+  v.lastService = v.kmActual;
+  v.lastServiceDate = fecha;
+  v.taller = taller || v.taller;
+  v.history.push({ km: v.kmActual, fecha, tipo: 'Serv. Menor', taller: v.taller });
+  saveData();
+  renderMantenimiento();
+  renderAlerts();
+}
+
+function updateKm(vkey) {
+  const v = db.vehicles[vkey];
+  const km = prompt(`Actualizar kilometraje para ${v.name}\nKm actual:`, v.kmActual);
+  if (!km) return;
+  v.kmActual = parseInt(km) || v.kmActual;
+  saveData();
+  renderMantenimiento();
+  renderUnitStatusGrid();
+  renderAlerts();
+}
+
+/* ===================== THERMOS ===================== */
+function renderThermos() {
+  const container = document.getElementById('thermo-cards-container');
+
+  container.innerHTML = Object.entries(db.thermos).map(([k,t]) => {
+    const s = getThermoStatus(k);
+    const nextHr = t.lastService + t.service;
+    const barColor = s.status === 'Vencido' ? '#D62828' : s.status === 'Próximo' ? '#F39C12' : '#2ECC71';
+
+    return `
+    <div class="maint-card">
+      <div class="maint-card-header" style="background:#1A3A5C">
+        <div class="maint-card-title">❄️ ${t.name}</div>
+        <div class="maint-card-km">${t.vehicle} | Hrs: ${t.horasActuales.toLocaleString()}</div>
+      </div>
+      <div class="maint-card-body">
+        <div class="maint-row">
+          <span class="maint-label">Estado</span>
+          <span class="semaphore ${s.cls}">${s.status}</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Intervalo</span>
+          <span class="maint-value">Cada ${t.service} hrs</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Último Servicio</span>
+          <span class="maint-value">${t.lastServiceDate} — ${t.lastService} hrs</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Próximo Servicio</span>
+          <span class="maint-value text-mono">${nextHr} hrs</span>
+        </div>
+        <div class="maint-row">
+          <span class="maint-label">Hrs Restantes</span>
+          <span class="maint-value" style="color:${barColor}">${s.remaining > 0 ? s.remaining + ' hrs' : '⚠️ Vencido por ' + Math.abs(s.remaining) + ' hrs'}</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width:${s.pct}%;background:${barColor}"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost" style="font-size:11px;flex:1" onclick="registerThermoMaint('${k}')">+ Registrar Servicio</button>
+          <button class="btn btn-primary" style="font-size:11px" onclick="updateHrs('${k}')">⏱️ Actualizar Hrs</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // History
+  const tbody = document.getElementById('thermo-history-body');
+  const loads = db.loads.filter(l => ['thermo-hector','thermo-mauricio','thermo-nissan'].includes(l.unidad));
+  loads.sort((a,b) => parseFecha(b.fecha) - parseFecha(a.fecha));
+
+  tbody.innerHTML = loads.map(l => {
+    const rend = calcRendimiento(l);
+    const ind = getRendIndicator(rend, true);
+    const t = db.thermos[l.unidad];
+    return `
+    <tr>
+      <td><strong>${t ? t.name : l.unidad}</strong></td>
+      <td class="text-mono">${l.fecha}</td>
+      <td class="text-mono">${l.hrIni||0}</td>
+      <td class="text-mono">${l.hrFin||0}</td>
+      <td class="text-mono">${l.litros||0}</td>
+      <td class="text-mono">${rend}</td>
+      <td class="text-mono">$${(l.costo||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      <td><span class="semaphore ${ind.cls}" style="font-size:10px">${ind.label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function registerThermoMaint(tkey) {
+  const t = db.thermos[tkey];
+  const fecha = prompt(`Registrar servicio para ${t.name}\nFecha (DD/MM/AAAA):`, new Date().toLocaleDateString('es-MX'));
+  if (!fecha) return;
+  t.lastService = t.horasActuales;
+  t.lastServiceDate = fecha;
+  t.history.push({ hrs: t.horasActuales, fecha, tipo: 'Servicio' });
+  saveData();
+  renderThermos();
+  renderAlerts();
+}
+
+function updateHrs(tkey) {
+  const t = db.thermos[tkey];
+  const hrs = prompt(`Actualizar horas para ${t.name}\nHoras actuales:`, t.horasActuales);
+  if (!hrs) return;
+  t.horasActuales = parseInt(hrs) || t.horasActuales;
+  saveData();
+  renderThermos();
+  renderAlerts();
+}
+
+/* ===================== MODAL: REGISTER LOAD ===================== */
+function openModal() {
+  document.getElementById('modal-carga').classList.add('open');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('m-fecha').value = today;
+  document.getElementById('m-hora').value = new Date().toTimeString().slice(0,5);
+  document.getElementById('m-unidad').addEventListener('change', toggleModalType);
+  toggleModalType();
+}
+
+function toggleModalType() {
+  const u = document.getElementById('m-unidad').value;
+  const isThermo = u.startsWith('thermo');
+  document.getElementById('m-km-section').style.display = isThermo ? 'none' : 'grid';
+  document.getElementById('m-hr-section').style.display = isThermo ? 'grid' : 'none';
+}
+
+function closeModal() {
+  document.getElementById('modal-carga').classList.remove('open');
+}
+
+function saveLoad() {
+  const unidad = document.getElementById('m-unidad').value;
+  const isThermo = unidad.startsWith('thermo');
+  const fecha = document.getElementById('m-fecha').value;
+  const hora = document.getElementById('m-hora').value;
+  const litros = parseFloat(document.getElementById('m-litros').value) || 0;
+  const costo = parseFloat(document.getElementById('m-costo').value) || 0;
+  const cliente = document.getElementById('m-cliente').value;
+  const obs = document.getElementById('m-obs').value;
+
+  // Build date string DD/MM/YYYY
+  const [y,m,d] = fecha.split('-');
+  const fechaStr = `${d}/${m}/${y}`;
+
+  const newLoad = {
+    id: Date.now(),
+    unidad, fecha: fechaStr, hora, litros, costo, cliente, obs
+  };
+
+  if (isThermo) {
+    newLoad.hrIni = parseInt(document.getElementById('m-hr-ini').value) || 0;
+    newLoad.hrFin = parseInt(document.getElementById('m-hr-fin').value) || 0;
+    // Update thermo hours
+    if (db.thermos[unidad]) {
+      db.thermos[unidad].horasActuales = Math.max(db.thermos[unidad].horasActuales, newLoad.hrFin);
+    }
+  } else {
+    newLoad.kmIni = parseInt(document.getElementById('m-km-ini').value) || 0;
+    newLoad.kmFin = parseInt(document.getElementById('m-km-fin').value) || 0;
+    // Update vehicle km
+    const vehicleMap = { nissan:'nissan', peugeot:'peugeot', hector:'hector', mauricio:'mauricio' };
+    const vkey = vehicleMap[unidad];
+    if (vkey && db.vehicles[vkey]) {
+      db.vehicles[vkey].kmActual = Math.max(db.vehicles[vkey].kmActual, newLoad.kmFin);
+    }
+  }
+
+  db.loads.push(newLoad);
+  saveData();
+  closeModal();
+
+  // Re-render current page
+  const active = document.querySelector('.page.active');
+  if (active) {
+    const pid = active.id.replace('page-','');
+    renderPage(pid);
+  }
+  renderDashboard();
+
+  // Clear fields
+  document.getElementById('m-km-ini').value = '';
+  document.getElementById('m-km-fin').value = '';
+  document.getElementById('m-hr-ini').value = '';
+  document.getElementById('m-hr-fin').value = '';
+  document.getElementById('m-litros').value = '';
+  document.getElementById('m-costo').value = '';
+  document.getElementById('m-cliente').value = '';
+  document.getElementById('m-obs').value = '';
+}
+
+/* ===================== THEME ===================== */
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  document.getElementById('theme-icon').textContent = isLight ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isLight ? 'Modo Oscuro' : 'Modo Claro';
+  localStorage.setItem('amal_theme', isLight ? 'light' : 'dark');
+}
+
+/* ===================== EXPORT ===================== */
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'amal_flotilla_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+}
+
+/* ===================== INIT ===================== */
+window.addEventListener('DOMContentLoaded', () => {
+  // Restore theme
+  if (localStorage.getItem('amal_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-icon').textContent = '🌙';
+    document.getElementById('theme-label').textContent = 'Modo Oscuro';
+  }
+  renderDashboard();
+  calcSolTotals();
+
+  // Close modal on overlay click
+  document.getElementById('modal-carga').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Default solicitud date display
+  const today = new Date().toISOString().split('T')[0];
+  if (!db.solicitud.fecha) db.solicitud.fecha = today;
+  document.getElementById('sol-fecha').value = db.solicitud.fecha;
+  updateSolFecha();
+});
+</script>
+</body>
+</html>
